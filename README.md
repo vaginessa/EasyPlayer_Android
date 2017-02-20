@@ -20,33 +20,33 @@ Android：Android Studio编译；
 ## DEMO效果 ##
 
 
-![EasyPlayer Android](https://raw.githubusercontent.com/EasyDarwin/EasyPlayer/master/Android/EasyPlayer/screenshot/single_video.jpg?raw=true)
+![EasyPlayer Android](https://raw.githubusercontent.com/EasyDarwin/EasyPlayer_Android/master/EasyPlayer/screenshot/single_video.jpg?raw=true)
 
 
 ##更新记录##
 
-### Android v1.1.17.0110 (2017-01-10) ###
+### v1.1.17.0110 (2017-01-10) ###
 
 * EasyPlayer Android Pro全功能版本
 * 支持RTSP、RTMP、HTTP、HLS多种流媒体协议；
 
 
-### Android v1.0.16.0818 (2016-08-18) ###
+### v1.0.16.0818 (2016-08-18) ###
 
 * 增加了保存视频快照功能
 * 支持抓拍、录像、实时码率展示
 * 支持视频窗口拖拽、放大（参考360小水滴）
 * 支持手动输入视频源和获取（EasyDarwin服务器）直播视频源
 
-### Android v1.0.16.0801 (2016-08-01) ###
+### v1.0.16.0801 (2016-08-01) ###
 
 * 增加了多窗口播放功能
 
-### Android v1.0.16.0506 (2016-05-06) ###
+### v1.0.16.0506 (2016-05-06) ###
 
 * 修复G.711播放噪音问题
 
-### Android v1.0.16.0403 (2016-04-03) ###
+### v1.0.16.0403 (2016-04-03) ###
 
 * EasyPlayer 安卓初版
 * 视频编码支持H.264
