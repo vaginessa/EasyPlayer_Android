@@ -2,8 +2,10 @@ package org.easydarwin.easyplayer.fragments;
 
 
 import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
 import android.graphics.drawable.ColorDrawable;
@@ -22,17 +24,17 @@ import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.ImageView;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.LinearLayout;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.signature.StringSignature;
+import com.google.android.exoplayer2.SimpleExoPlayer;
 
 import org.easydarwin.easyplayer.PlayActivity;
 import org.easydarwin.easyplayer.PlaylistActivity;
@@ -51,7 +53,6 @@ import java.util.Date;
 import java.util.UUID;
 
 import uk.copywitchshame.senab.photoview.gestures.PhotoViewAttacher;
-
 
 public class PlayFragment extends Fragment implements TextureView.SurfaceTextureListener, PhotoViewAttacher.OnMatrixChangedListener {
     // TODO: Rename parameter arguments, choose names that match
@@ -98,6 +99,8 @@ public class PlayFragment extends Fragment implements TextureView.SurfaceTexture
             });
         }
     };
+    private SimpleExoPlayer mPlayer;
+    private boolean mFullscreenMode;
 
     public void setSelected(boolean selected) {
         mSurfaceView.animate().scaleX(selected ? 0.9f : 1.0f);
@@ -245,6 +248,41 @@ public class PlayFragment extends Fragment implements TextureView.SurfaceTexture
         };
         ViewGroup parent = (ViewGroup) view.getParent();
         parent.addOnLayoutChangeListener(listener);
+
+        if (mFullscreenMode) enterFullscreen();else quiteFullscreen();
+    }
+
+
+
+    public void enterFullscreen() {
+        mFullscreenMode = true;
+        if (getView() == null){
+            return;
+        }
+        if (mAttacher != null) {
+            mAttacher.cleanup();
+        } mSurfaceView.setTransform(new Matrix());
+        mAngleView.setVisibility(View.GONE);
+    }
+
+    public void quiteFullscreen() {
+        mFullscreenMode = false;
+        if (getView() == null){
+            return;
+        }
+        if (mAttacher != null) {
+            mAttacher.cleanup();
+        }
+        ViewGroup parent = (ViewGroup) getView().getParent();
+        parent.addOnLayoutChangeListener(listener);
+        fixPlayerRatio(getView(), parent.getWidth(), parent.getHeight());
+
+
+        mAttacher = new PhotoViewAttacher(mSurfaceView, mWidth, mHeight);
+        mAttacher.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        mAttacher.setOnMatrixChangeListener(PlayFragment.this);
+        mAttacher.update();
+        mAngleView.setVisibility(View.VISIBLE);
     }
 
     private void onVideoSizeChange() {
@@ -253,7 +291,7 @@ public class PlayFragment extends Fragment implements TextureView.SurfaceTexture
         if (mAttacher != null) {
             mAttacher.cleanup();
         }
-        if (!isLandscape()) {
+        if (!mFullscreenMode) {
 
             ViewGroup parent = (ViewGroup) getView().getParent();
             parent.addOnLayoutChangeListener(listener);
@@ -265,6 +303,9 @@ public class PlayFragment extends Fragment implements TextureView.SurfaceTexture
             mAttacher.setOnMatrixChangeListener(PlayFragment.this);
             mAttacher.update();
             mAngleView.setVisibility(View.VISIBLE);
+        }else {
+            mSurfaceView.setTransform(new Matrix());
+            mAngleView.setVisibility(View.GONE);
         }
     }
 
@@ -464,6 +505,13 @@ public class PlayFragment extends Fragment implements TextureView.SurfaceTexture
             mStreamRender.stop();
             mStreamRender = null;
         }
+
+        if (mPlayer != null) {
+            mPlayer.stop();
+            mPlayer.release();
+            mPlayer = null;
+        }
+
         return true;
     }
 
@@ -477,6 +525,12 @@ public class PlayFragment extends Fragment implements TextureView.SurfaceTexture
             mRR.send(RESULT_REND_STOPED, null);
             mStreamRender.stop();
             mStreamRender = null;
+        }
+
+        if (mPlayer != null) {
+            mPlayer.stop();
+            mPlayer.release();
+            mPlayer = null;
         }
         super.onDestroy();
     }

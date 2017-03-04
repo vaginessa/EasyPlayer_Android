@@ -439,13 +439,23 @@ public class PlayActivity extends AppCompatActivity {
         mBinding.liveVideoBar.liveVideoBarTakePicture.setEnabled(false);
         mBinding.liveVideoBar.liveVideoBarRecord.setEnabled(false);
 
-//        LinearLayout container = (LinearLayout) findViewById(R.id.player_container);
-//        if (isLandscape()) {
-//            getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-//            container.setOrientation(LinearLayout.HORIZONTAL);
-//        } else {
-//            container.setOrientation(LinearLayout.VERTICAL);
-//        }
+        LinearLayout container = mBinding.playerContainer;
+        if (isLandscape()) {
+
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            setNavVisibility(false);
+            // 横屏情况下,播放窗口横着排开
+            container.setOrientation(LinearLayout.HORIZONTAL);
+            mBinding.renderHolder.getLayoutParams().height = ViewGroup.LayoutParams.MATCH_PARENT;
+            mRenderFragment.enterFullscreen();
+        } else { // 竖屏,取消全屏状态
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            setNavVisibility(true);
+            // 竖屏情况下,播放窗口竖着排开
+            container.setOrientation(LinearLayout.VERTICAL);
+            mBinding.renderHolder.getLayoutParams().height = getResources().getDimensionPixelSize(R.dimen.render_wnd_height);
+            mRenderFragment.quiteFullscreen();
+        }
     }
 
     private void onVideoDisplayed() {
@@ -489,6 +499,7 @@ public class PlayActivity extends AppCompatActivity {
             // 横屏情况下,播放窗口横着排开
             container.setOrientation(LinearLayout.HORIZONTAL);
             mBinding.renderHolder.getLayoutParams().height = ViewGroup.LayoutParams.MATCH_PARENT;
+            mRenderFragment.enterFullscreen();
         } else {
             // 竖屏,取消全屏状态
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -496,6 +507,7 @@ public class PlayActivity extends AppCompatActivity {
             // 竖屏情况下,播放窗口竖着排开
             container.setOrientation(LinearLayout.VERTICAL);
             mBinding.renderHolder.getLayoutParams().height = getResources().getDimensionPixelSize(R.dimen.render_wnd_height);
+            mRenderFragment.quiteFullscreen();
         }
     }
 
@@ -555,5 +567,32 @@ public class PlayActivity extends AppCompatActivity {
                 mBinding.liveVideoBar.liveVideoBarRecord;
         mPlayAudio.setImageState(status == 1 ? new int[]{android.R.attr.state_checked} : new int[]{}, true);
         mPlayAudio.removeCallbacks(mResetRecordStateRunnable);
+    }
+
+    public void onFullscreen(View view) {
+//        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+        setNavVisibility(false);
+        // 横屏情况下,播放窗口横着排开
+        mBinding.renderHolder.getLayoutParams().height = ViewGroup.LayoutParams.MATCH_PARENT;
+        mRenderFragment.enterFullscreen();
+    }
+
+    @Override
+    public void onBackPressed() {
+        WindowManager.LayoutParams attrs = getWindow().getAttributes();
+        if((attrs.flags & WindowManager.LayoutParams.FLAG_FULLSCREEN)== WindowManager.LayoutParams.FLAG_FULLSCREEN){
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            setNavVisibility(true);
+            mBinding.renderHolder.getLayoutParams().height = getResources().getDimensionPixelSize(R.dimen.render_wnd_height);
+            mBinding.renderHolder.requestLayout();
+
+            mRenderFragment.quiteFullscreen();
+
+            return;
+        }
+        super.onBackPressed();
     }
 }

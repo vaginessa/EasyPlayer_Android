@@ -51,13 +51,25 @@
             android:gravity="center_horizontal"
             android:onClick="onRecordOrStop"
             android:src="@drawable/live_video_bar_btn_record" />
+
+
+        <TextView
+            android:id="@+id/enter_fullscreen"
+            style="@style/Widget.AppCompat.ActionButton"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:onClick="onFullscreen"
+            android:text="全屏" />
         <TextView
             android:id="@+id/file_directory"
+            style="@style/Widget.AppCompat.ActionButton"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:onClick="onOpenFileDirectory"
             android:gravity="center"
-            android:text="文件夹"/>
+            android:text="文件"/>
     </LinearLayout>
 </layout>

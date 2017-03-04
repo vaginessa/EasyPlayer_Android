@@ -54,9 +54,9 @@ public class UpdateMgr {
                 try {
                     String url;
                     if (PlaylistActivity.isPro()) {
-                        url = "http://www.easydarwin.org/versions/easyplayer/version.txt";
-                    }else{
                         url = "http://www.easydarwin.org/versions/easyplayer_pro/version.txt";
+                    }else{
+                        url = "http://www.easydarwin.org/versions/easyplayer/version.txt";
                     }
                     OkHttpClient client = new OkHttpClient();
                     Request request = new Request.Builder()
