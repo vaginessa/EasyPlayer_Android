@@ -17,17 +17,8 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.text.Editable;
-import android.text.InputFilter;
-import android.text.InputType;
-import android.text.Spanned;
 import android.text.TextUtils;
-import android.text.TextWatcher;
-import android.text.method.DigitsKeyListener;
 import android.util.Base64;
-import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
@@ -443,7 +434,6 @@ public class PlaylistActivity extends AppCompatActivity implements View.OnClickL
             mCursor.moveToPosition(pos);
             String playUrl = mCursor.getString(mCursor.getColumnIndex(VideoSource.URL));
             if (!TextUtils.isEmpty(playUrl)) {
-
                 Intent i = new Intent(PlaylistActivity.this, PlayActivity.class);
                 i.putExtra("play_url", playUrl);
                 mPos = pos;

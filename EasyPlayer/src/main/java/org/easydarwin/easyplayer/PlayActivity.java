@@ -195,7 +195,7 @@ public class PlayActivity extends AppCompatActivity {
 
     protected void initSoundPool() {
         if (true)
-        return;
+            return;
         AudioManager mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         mAudioVolumn = (float) mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
         mMaxVolume = (float) mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
@@ -412,20 +412,24 @@ public class PlayActivity extends AppCompatActivity {
 
         if (savedInstanceState == null) {
 
-            boolean useUDP = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.key_udp_mode), false);
-            PlayFragment fragment = PlayFragment.newInstance(url, useUDP ? RTSPClient.TRANSTYPE_UDP : RTSPClient.TRANSTYPE_TCP, new ResultReceiver(new Handler()) {
-                @Override
-                protected void onReceiveResult(int resultCode, Bundle resultData) {
-                    super.onReceiveResult(resultCode, resultData);
-                    if (resultCode == PlayFragment.RESULT_REND_STARTED) {
-                        onPlayStart();
-                    } else if (resultCode == PlayFragment.RESULT_REND_STOPED) {
-                        onPlayStoped();
-                    } else if (resultCode == PlayFragment.RESULT_REND_VIDEO_DISPLAYED) {
-                        onVideoDisplayed();
+            ResultReceiver rr = getIntent().getParcelableExtra("rr");
+            if (rr == null) {
+                rr = new ResultReceiver(new Handler()) {
+                    @Override
+                    protected void onReceiveResult(int resultCode, Bundle resultData) {
+                        super.onReceiveResult(resultCode, resultData);
+                        if (resultCode == PlayFragment.RESULT_REND_STARTED) {
+                            onPlayStart();
+                        } else if (resultCode == PlayFragment.RESULT_REND_STOPED) {
+                            onPlayStoped();
+                        } else if (resultCode == PlayFragment.RESULT_REND_VIDEO_DISPLAYED) {
+                            onVideoDisplayed();
+                        }
                     }
-                }
-            });
+                };
+            }
+            boolean useUDP = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.key_udp_mode), false);
+            PlayFragment fragment = PlayFragment.newInstance(url, useUDP ? RTSPClient.TRANSTYPE_UDP : RTSPClient.TRANSTYPE_TCP, rr);
             getSupportFragmentManager().beginTransaction().add(R.id.render_holder, fragment).commit();
             mRenderFragment = fragment;
         } else {
@@ -583,7 +587,7 @@ public class PlayActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         WindowManager.LayoutParams attrs = getWindow().getAttributes();
-        if((attrs.flags & WindowManager.LayoutParams.FLAG_FULLSCREEN)== WindowManager.LayoutParams.FLAG_FULLSCREEN){
+        if ((attrs.flags & WindowManager.LayoutParams.FLAG_FULLSCREEN) == WindowManager.LayoutParams.FLAG_FULLSCREEN) {
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
             setNavVisibility(true);
             mBinding.renderHolder.getLayoutParams().height = getResources().getDimensionPixelSize(R.dimen.render_wnd_height);

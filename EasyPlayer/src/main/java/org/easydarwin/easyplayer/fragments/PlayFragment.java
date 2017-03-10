@@ -34,7 +34,6 @@ import android.widget.LinearLayout;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.signature.StringSignature;
-import com.google.android.exoplayer2.SimpleExoPlayer;
 
 import org.easydarwin.easyplayer.PlayActivity;
 import org.easydarwin.easyplayer.PlaylistActivity;
@@ -99,7 +98,6 @@ public class PlayFragment extends Fragment implements TextureView.SurfaceTexture
             });
         }
     };
-    private SimpleExoPlayer mPlayer;
     private boolean mFullscreenMode;
 
     public void setSelected(boolean selected) {
@@ -506,12 +504,6 @@ public class PlayFragment extends Fragment implements TextureView.SurfaceTexture
             mStreamRender = null;
         }
 
-        if (mPlayer != null) {
-            mPlayer.stop();
-            mPlayer.release();
-            mPlayer = null;
-        }
-
         return true;
     }
 
@@ -525,12 +517,6 @@ public class PlayFragment extends Fragment implements TextureView.SurfaceTexture
             mRR.send(RESULT_REND_STOPED, null);
             mStreamRender.stop();
             mStreamRender = null;
-        }
-
-        if (mPlayer != null) {
-            mPlayer.stop();
-            mPlayer.release();
-            mPlayer = null;
         }
         super.onDestroy();
     }
