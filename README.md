@@ -1,6 +1,6 @@
 # EasyPlayer #
 
-EasyPlayer & EasyPlayerPro是由EasyDarwin团队开发和维护的一个流媒体播放器项目，目前支持**Windows**(支持**多窗口**、包含**ActiveX**，**npAPI** Web插件)、**Android**平台，**iOS**平台，视频支持**H.264**，**H.265**，**MPEG4**，**MJPEG**，音频支持**G711A**，**G711U**，**G726**，**AAC**，支持RTSP over TCP/UDP、RTMP、HTTP、HLS等多种协议，支持**硬解码**，是一套极佳的流媒体全平台播放组件！
+EasyPlayer & EasyPlayerPro是由EasyDarwin团队开发和维护的一个流媒体播放器项目，目前支持**Windows**(支持**多窗口**、包含**ActiveX**，**npAPI** Web插件)、**Android**平台，**iOS**平台，视频支持**H.264**，**H.265**，**MPEG4**，**MJPEG**，音频支持**G711A**，**G711U**，**G726**，**AAC**，支持RTSP over TCP/UDP、**RTMP**、**HTTP**、**HLS**等多种协议，支持**硬解码**，是一套极佳的流媒体全平台播放组件！
 
 ## 编译方法 ##
 Android：Android Studio编译；
@@ -52,6 +52,10 @@ Android：Android Studio编译；
 * 视频编码支持H.264
 * 音频编码支持AAC/G.711A(PCMA)/G.711U(PCMU)
 * 仅支持RTSP/RTP协议
+
+
+## 商业授权 ##
+EasyPlayer是一款非常稳定的流媒体播放器，各平台版本需要经过授权才能商业使用，商业授权方案可以邮件发送至[support@easydarwin.org](mailto:support@easydarwin.org "EasyDarwin support mail")或者通过电话Tel：**13718530929** 进行更深入的技术与合作咨询；
 
 ## 获取更多信息 ##
 
