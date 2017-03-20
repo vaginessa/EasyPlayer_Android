@@ -8,9 +8,9 @@ Android：Android Studio编译；
 
 ## 最新版本下载 ##
 
-- Android：[http://fir.im/EasyPlayer](http://fir.im/EasyPlayer)
+- Android RTSP版：[http://fir.im/EasyPlayer](http://fir.im/EasyPlayer)
 
-![EasyPlayer Android](http://www.easydarwin.org/github/images/firimeasyplayerdroid.png)
+![EasyPlayer Android](http://www.easydarwin.org/github/images/easyplayer/firimeasyplayerdroid.png)
 
 - Android Pro全功能版：[http://fir.im/EasyPlayerPro](http://fir.im/EasyPlayerPro)
 
@@ -18,7 +18,6 @@ Android：Android Studio编译；
 
 
 ## DEMO效果 ##
-
 
 ![EasyPlayer Android](https://raw.githubusercontent.com/EasyDarwin/EasyPlayer_Android/master/EasyPlayer/screenshot/single_video.jpg?raw=true)
 
