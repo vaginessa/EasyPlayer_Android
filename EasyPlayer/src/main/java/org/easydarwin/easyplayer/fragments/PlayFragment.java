@@ -31,6 +31,7 @@ import android.view.WindowManager;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.signature.StringSignature;
@@ -215,7 +216,11 @@ public class PlayFragment extends Fragment implements TextureView.SurfaceTexture
                     new AlertDialog.Builder(getActivity()).setMessage("视频格式不支持").setTitle("SORRY").setPositiveButton(android.R.string.ok, null).show();
                 }else if (resultCode == EasyRTSPClient.RESULT_EVENT){
 
-                    activity.onEvent(PlayFragment.this, resultData.getString("event-msg"));
+                    int errorcode = resultData.getInt("errorcode");
+                    if (errorcode != 0){
+                        stopRending();
+                    }
+                    activity.onEvent(PlayFragment.this, errorcode,resultData.getString("event-msg"));
                 }else if (resultCode == EasyRTSPClient.RESULT_RECORD_BEGIN){
                     activity.onRecordState(1);
                 }else if (resultCode == EasyRTSPClient.RESULT_RECORD_END){
@@ -471,14 +476,20 @@ public class PlayFragment extends Fragment implements TextureView.SurfaceTexture
 //            });
 //            mPlayer = player;
         }else {
-            mStreamRender = new EasyRTSPClient(getContext(), "79393674363536526D34324136365259703173554A655A76636D63755A57467A65575268636E64706269356C59584E356347786865575679567778576F502B6C34456468646D6C754A6B4A68596D397A595541794D4445325257467A65555268636E6470626C526C5957316C59584E35", surface, mResultReceiver);
+            mStreamRender = new EasyRTSPClient(getContext(), "79393674363536526D343241654D7859707A4F484A655A76636D63755A57467A65575268636E64706269356C59584E356347786865575679567778576F502B6C34456468646D6C754A6B4A68596D397A595541794D4445325257467A65555268636E6470626C526C5957316C59584E35", surface, mResultReceiver);
 
             boolean autoRecord = PreferenceManager.getDefaultSharedPreferences(getContext()).getBoolean("auto_record", false);
 
             File f = new File(TheApp.sMoviePath);
             f.mkdirs();
 
-            mStreamRender.start(mUrl, mType, RTSPClient.EASY_SDK_VIDEO_FRAME_FLAG | RTSPClient.EASY_SDK_AUDIO_FRAME_FLAG, "", "", autoRecord ? new File(f, new SimpleDateFormat("yy-MM-dd HH:mm:ss").format(new Date()) + ".mp4").getPath():null);
+            try {
+                mStreamRender.start(mUrl, mType, RTSPClient.EASY_SDK_VIDEO_FRAME_FLAG | RTSPClient.EASY_SDK_AUDIO_FRAME_FLAG, "", "", autoRecord ? new File(f, new SimpleDateFormat("yy-MM-dd HH:mm:ss").format(new Date()) + ".mp4").getPath() : null);
+            }catch (Exception e){
+                e.printStackTrace();
+                Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                return;
+            }
 //        mStreamRender.start2(mUrl, mType);
             mRR.send(RESULT_REND_STARTED, null);
         }
@@ -498,13 +509,17 @@ public class PlayFragment extends Fragment implements TextureView.SurfaceTexture
 
     @Override
     public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+        stopRending();
+
+        return true;
+    }
+
+    private void stopRending() {
         if (mStreamRender != null) {
             mRR.send(RESULT_REND_STOPED, null);
             mStreamRender.stop();
             mStreamRender = null;
         }
-
-        return true;
     }
 
     /**
@@ -513,11 +528,7 @@ public class PlayFragment extends Fragment implements TextureView.SurfaceTexture
      */
     @Override
     public void onDestroy() {
-        if (mStreamRender != null) {
-            mRR.send(RESULT_REND_STOPED, null);
-            mStreamRender.stop();
-            mStreamRender = null;
-        }
+        stopRending();
         super.onDestroy();
     }
 

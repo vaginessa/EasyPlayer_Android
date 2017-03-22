@@ -25,6 +25,7 @@ import android.support.v4.view.ViewConfigurationCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.text.method.ScrollingMovementMethod;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewConfiguration;
@@ -460,6 +461,7 @@ public class PlayActivity extends AppCompatActivity {
             mBinding.renderHolder.getLayoutParams().height = getResources().getDimensionPixelSize(R.dimen.render_wnd_height);
             mRenderFragment.quiteFullscreen();
         }
+        mBinding.msgTxt.setMovementMethod(new ScrollingMovementMethod());
     }
 
     private void onVideoDisplayed() {
@@ -562,8 +564,8 @@ public class PlayActivity extends AppCompatActivity {
         startActivity(i);
     }
 
-    public void onEvent(PlayFragment playFragment, String msg) {
-        mBinding.msgTxt.setText(msg);
+    public void onEvent(PlayFragment playFragment,int err, String msg) {
+        mBinding.msgTxt.append(String.format("[%s]\t%s\n",new SimpleDateFormat("HH:mm:ss").format(new Date()),msg));
     }
 
     public void onRecordState(int status) {
