@@ -9,8 +9,8 @@ android {
         applicationId "org.easydarwin.easyplayer"
         minSdkVersion 16
         targetSdkVersion 23
-        versionCode 17
-        versionName "1.1.17.0322"
+        versionCode 18
+        versionName "1.1.17.0504"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
