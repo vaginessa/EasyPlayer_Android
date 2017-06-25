@@ -1,9 +1,11 @@
 package org.easydarwin.easyplayer;
 
+import android.Manifest;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.databinding.DataBindingUtil;
 import android.os.AsyncTask;
@@ -12,6 +14,7 @@ import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.ActivityOptionsCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -32,7 +35,7 @@ import com.bumptech.glide.signature.StringSignature;
 import com.umeng.analytics.MobclickAgent;
 
 import org.easydarwin.easyplayer.data.VideoSource;
-import org.easydarwin.easyplayer.updatemgr.UpdateMgr;
+import org.easydarwin.update.UpdateMgr;
 import org.esaydarwin.rtsp.player.BuildConfig;
 import org.esaydarwin.rtsp.player.R;
 import org.esaydarwin.rtsp.player.databinding.ContentPlaylistBinding;
@@ -51,6 +54,8 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+import static org.easydarwin.update.UpdateMgr.MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE;
+
 public class PlaylistActivity extends AppCompatActivity implements View.OnClickListener, View.OnLongClickListener {
 
     private static final int REQUEST_PLAY = 1000;
@@ -59,6 +64,7 @@ public class PlaylistActivity extends AppCompatActivity implements View.OnClickL
     private int mPos;
     private ContentPlaylistBinding mBinding;
     private Cursor mCursor;
+    private UpdateMgr update;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -217,8 +223,27 @@ public class PlaylistActivity extends AppCompatActivity implements View.OnClickL
                 startActivity(new Intent(PlaylistActivity.this, AboutActivity.class));
             }
         });
-        UpdateMgr update = new UpdateMgr(this);
-        update.checkUpdate();
+        String url;
+        if (PlaylistActivity.isPro()) {
+            url = "http://www.easydarwin.org/versions/easyplayer_pro/version.txt";
+        } else {
+            url = "http://www.easydarwin.org/versions/easyplayer/version.txt";
+        }
+        update = new UpdateMgr(this);
+        update.checkUpdate(url);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE:
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    update.doDownload();
+                }
+        }
     }
 
     public static boolean isPro() {
@@ -251,7 +276,7 @@ public class PlaylistActivity extends AppCompatActivity implements View.OnClickL
             @Override
             protected Cursor doInBackground(Void... voids) {
                 try {
-                    String ip = PreferenceManager.getDefaultSharedPreferences(PlaylistActivity.this).getString(getString(R.string.key_ip), "114.55.107.180");
+                    String ip = PreferenceManager.getDefaultSharedPreferences(PlaylistActivity.this).getString(getString(R.string.key_ip), TheApp.DEFAULT_SERVER_IP);
                     int port = Integer.parseInt(PreferenceManager.getDefaultSharedPreferences(PlaylistActivity.this).getString(getString(R.string.key_port), "10008"));
 
                     OkHttpClient client = new OkHttpClient();

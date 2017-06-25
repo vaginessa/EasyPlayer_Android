@@ -44,12 +44,4 @@ public class PlayActivityTest {
             return i;
         }
     };
-
-
-    @Test
-    public void testCodec throw Exception(){
-
-        Thread.sleep(5);
-    }
-
 }

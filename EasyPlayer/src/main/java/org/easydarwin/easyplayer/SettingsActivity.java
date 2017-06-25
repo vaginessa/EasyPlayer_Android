@@ -1,12 +1,15 @@
 package org.easydarwin.easyplayer;
 
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.content.SharedPreferences;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.preference.PreferenceManager;
+import android.view.MotionEvent;
 import android.view.View;
 
 import org.esaydarwin.rtsp.player.R;
@@ -39,7 +42,8 @@ public class SettingsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_setting);
-        mBinding.serverIp.setText(PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.key_ip), "114.55.107.180"));
+//        "114.55.107.180"
+        mBinding.serverIp.setText(PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.key_ip), TheApp.DEFAULT_SERVER_IP));
         mBinding.serverPort.setText(PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.key_port), "10008"));
         mBinding.transportMode.setChecked(android.preference.PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.key_udp_mode), false));
         mBinding.autoRecord.setChecked(android.preference.PreferenceManager.getDefaultSharedPreferences(this).getBoolean("auto_record", false));
@@ -58,5 +62,25 @@ public class SettingsActivity extends AppCompatActivity {
         editor.putBoolean("auto_record", mBinding.autoRecord.isChecked());
         editor.apply();
         finish();
+    }
+
+    public void onWhatIpMean(View view) {
+        if (mBinding.whatIpMean.getVisibility() != View.VISIBLE){
+            mBinding.whatIpMean.setVisibility(View.VISIBLE);
+        }else
+        {
+            mBinding.whatIpMean.setVisibility(View.GONE);
+        }
+    }
+
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_UP){
+            if (mBinding.whatIpMean.getVisibility() == View.VISIBLE){
+                mBinding.whatIpMean.setVisibility(View.GONE);
+            }
+        }
+        return super.onTouchEvent(event);
     }
 }
