@@ -650,7 +650,7 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
                                 mDecoder = decoder;
                             }
                             previewTickUs = mTexture.getTimestamp();
-                            differ = previewTickUs - frameInfo.stamp;
+//                            differ = previewTickUs - frameInfo.stamp;
 //                            index = mCodec.dequeueInputBuffer(0);
 //                            if (index >= 0) {
 //                                ByteBuffer buffer = mCodec.getInputBuffers()[index];
@@ -735,19 +735,20 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
                                                 newSleepUs = 0l;
                                             } else {
                                                 long cache = mNewestStample - previewStampUs;
-                                                newSleepUs = fixSleepTime(sleepUs, cache, 000000);
-//                                        Log.d(TAG, String.format("sleepUs:%d,newSleepUs:%d,Cache:%d", sleepUs, newSleepUs, cache));
+                                                newSleepUs = fixSleepTime(sleepUs, cache, 800000);
+                                                // Log.d(TAG, String.format("sleepUs:%d,newSleepUs:%d,Cache:%d", sleepUs, newSleepUs, cache));
                                             }
                                         }
                                         previewStampUs = info.presentationTimeUs;
 
-                                        if (true && Build.VERSION.SDK_INT >= 21) {
+                                        if (false && Build.VERSION.SDK_INT >= 21) {
                                             Log.d(TAG, String.format("releaseoutputbuffer:%d,stampUs:%d", index, previewStampUs));
                                             mCodec.releaseOutputBuffer(index, previewStampUs);
                                         } else {
                                             if (newSleepUs < 0) {
                                                 newSleepUs = 0;
                                             }
+//                                            Log.i(TAG,String.format("sleep:%d", newSleepUs/1000));
                                             Thread.sleep(newSleepUs / 1000);
                                             mCodec.releaseOutputBuffer(index, true);
                                         }
