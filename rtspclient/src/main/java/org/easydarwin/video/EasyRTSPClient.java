@@ -266,7 +266,7 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
     /**
      * 最新的视频时间戳
      */
-    private long mNewestStample;
+    private volatile long mNewestStample;
     private boolean mWaitingKeyFrame;
     private boolean mTimeout;
     private boolean mNotSupportedVideoCB, mNotSupportedAudioCB;
@@ -341,6 +341,7 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
         mAudioEnable = enable;
         AudioTrack at = mAudioTrack;
         if (at != null) {
+            Log.i(TAG,String.format("audio will be %s", enable?"enabled":"disabled"));
             synchronized (at) {
                 if (!enable) {
                     at.pause();
@@ -442,7 +443,7 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
                             return;
                         }
                         if (mAudioTrack == null) {
-                            int sampleRateInHz = (int) (frameInfo.sample_rate * 1.05);
+                            int sampleRateInHz = (int) (frameInfo.sample_rate * 1.02);
                             int channelConfig = frameInfo.channels == 1 ? AudioFormat.CHANNEL_OUT_MONO : AudioFormat.CHANNEL_OUT_STEREO;
                             int audioFormat = AudioFormat.ENCODING_PCM_16BIT;
                             int bfSize = AudioTrack.getMinBufferSize(sampleRateInHz, channelConfig, audioFormat) * 4;
@@ -472,7 +473,8 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
                                 if (frameInfo.codec != EASY_SDK_AUDIO_CODEC_AAC) {
                                     pumpPCMSample(mBufferReuse, outLen[0], frameInfo.stamp);
                                 }
-                                mAudioTrack.write(mBufferReuse, 0, outLen[0]);
+                                if (mAudioEnable)
+                                    mAudioTrack.write(mBufferReuse, 0, outLen[0]);
                             }
                             frameInfo = null;
                         }
@@ -781,9 +783,14 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
     }
 
     private static final long fixSleepTime(long sleepTimeUs, long totalTimestampDifferUs, long delayUs) {
+        if (totalTimestampDifferUs < 0l){
+            Log.w(TAG,String.format("totalTimestampDifferUs is:%d, this should not be happen.", totalTimestampDifferUs));
+            totalTimestampDifferUs = 0;
+        }
         double dValue = ((double) (delayUs - totalTimestampDifferUs)) / 1000000d;
         double radio = Math.exp(dValue);
         final double r = sleepTimeUs * radio + 0.5f;
+//        Log.d(TAG,String.format("fixSleepTime %d,%d,%d->%d", sleepTimeUs, totalTimestampDifferUs, delayUs, (long) r));
         return (long) r;
     }
 
