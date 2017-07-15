@@ -670,29 +670,32 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
                         }
 
                         if (mDecoder != null) {
-                            long decodeBegin = System.currentTimeMillis();
-                            mDecoder.decodeAndSnapAndDisplay(frameInfo);
-                            long decodeSpend = System.currentTimeMillis() - decodeBegin;
+                            if (frameInfo != null) {
+                                long decodeBegin = System.currentTimeMillis();
+                                mDecoder.decodeAndSnapAndDisplay(frameInfo);
+                                long decodeSpend = System.currentTimeMillis() - decodeBegin;
 
-                            boolean firstFrame = previewStampUs == 0l;
-                            if (firstFrame) {
-                                Log.i(TAG, String.format("POST VIDEO_DISPLAYED!!!"));
-                                ResultReceiver rr = mRR;
-                                if (rr != null) rr.send(RESULT_VIDEO_DISPLAYED, null);
-                            }
-                            long current = frameInfo.stamp;
+                                boolean firstFrame = previewStampUs == 0l;
+                                if (firstFrame) {
+                                    Log.i(TAG, String.format("POST VIDEO_DISPLAYED!!!"));
+                                    ResultReceiver rr = mRR;
+                                    if (rr != null) rr.send(RESULT_VIDEO_DISPLAYED, null);
+                                }
+                                long current = frameInfo.stamp;
 
-                            if (previewStampUs != 0l) {
-                                long sleepTime = current - previewStampUs - decodeSpend * 1000;
-                                if (sleepTime > 0) {
-                                    long cache = mNewestStample - frameInfo.stamp;
-                                    sleepTime = fixSleepTime(sleepTime * 1000, cache, 0);
+                                if (previewStampUs != 0l) {
+                                    long sleepTime = current - previewStampUs - decodeSpend * 1000;
                                     if (sleepTime > 0) {
-                                        Thread.sleep(sleepTime / 1000);
+                                        sleepTime %= 100000;
+                                        long cache = mNewestStample - frameInfo.stamp;
+                                        sleepTime = fixSleepTime(sleepTime, cache, 0);
+                                        if (sleepTime > 0) {
+                                            Thread.sleep(sleepTime / 1000);
+                                        }
                                     }
                                 }
+                                previewStampUs = current;
                             }
-                            previewStampUs = current;
                         } else {
                             do {
                                 if (frameInfo != null) {
