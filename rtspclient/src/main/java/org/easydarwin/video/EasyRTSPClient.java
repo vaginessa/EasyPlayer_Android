@@ -468,7 +468,7 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
                             }
                             outLen[0] = mBufferReuse.length;
                             long ms = SystemClock.currentThreadTimeMillis();
-                            int nRet = AudioCodec.decode((int) handle, frameInfo.buffer, 0, frameInfo.length, mBufferReuse, outLen);
+                            int nRet = AudioCodec.decode( handle, frameInfo.buffer, 0, frameInfo.length, mBufferReuse, outLen);
                             if (nRet == 0) {
                                 if (frameInfo.codec != EASY_SDK_AUDIO_CODEC_AAC) {
                                     pumpPCMSample(mBufferReuse, outLen[0], frameInfo.stamp);
@@ -483,7 +483,7 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
                     } finally {
                         am.abandonAudioFocus(l);
                         if (handle != 0) {
-                            AudioCodec.close((int) handle);
+                            AudioCodec.close(handle);
                         }
                         AudioTrack track = mAudioTrack;
                         if (track != null) {
@@ -648,7 +648,7 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
                                 Log.e(TAG, String.format("init codec error due to %s", e.getMessage()));
                                 e.fillInStackTrace();
                                 final VideoCodec.VideoDecoderLite decoder = new VideoCodec.VideoDecoderLite();
-                                decoder.create(frameInfo.width, frameInfo.height, mSurface);
+                                decoder.create(mSurface);
                                 mDecoder = decoder;
                             }
                             previewTickUs = mTexture.getTimestamp();
@@ -674,7 +674,8 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
                         if (mDecoder != null) {
                             if (frameInfo != null) {
                                 long decodeBegin = System.currentTimeMillis();
-                                mDecoder.decodeAndSnapAndDisplay(frameInfo);
+                                int []size = new int[2];
+                                mDecoder.decodeFrame(frameInfo, size);
                                 long decodeSpend = System.currentTimeMillis() - decodeBegin;
 
                                 boolean firstFrame = previewStampUs == 0l;
