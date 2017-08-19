@@ -374,7 +374,7 @@ public class PlaylistActivity extends AppCompatActivity implements View.OnClickL
                     if (i == 0) {
                         mCursor.moveToPosition(pos);
                         String playUrl = mCursor.getString(mCursor.getColumnIndex(VideoSource.URL));
-                        final int idx = mCursor.getInt(mCursor.getColumnIndex(VideoSource.INDEX));
+                        final int _id = mCursor.getInt(mCursor.getColumnIndex(VideoSource._ID));
                         final EditText edit = new EditText(PlaylistActivity.this);
                         edit.setHint(isPro() ? "RTSP/RTMP/HLS地址" : "RTSP地址");
                         final int hori = (int) getResources().getDimension(R.dimen.activity_horizontal_margin);
@@ -390,7 +390,7 @@ public class PlaylistActivity extends AppCompatActivity implements View.OnClickL
                                 }
                                 ContentValues cv = new ContentValues();
                                 cv.put(VideoSource.URL, mRTSPUrl);
-                                TheApp.sDB.update(VideoSource.TABLE_NAME, cv, VideoSource.INDEX + "=?", new String[]{String.valueOf(idx)});
+                                TheApp.sDB.update(VideoSource.TABLE_NAME, cv, VideoSource._ID + "=?", new String[]{String.valueOf(_id)});
 
                                 mCursor.close();
                                 mCursor = TheApp.sDB.query(VideoSource.TABLE_NAME, null, null, null, null, null, null);
