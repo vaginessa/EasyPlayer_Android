@@ -490,7 +490,7 @@ public class PlayFragment extends Fragment implements TextureView.SurfaceTexture
                 mStreamRender.start(mUrl, mType, RTSPClient.EASY_SDK_VIDEO_FRAME_FLAG | RTSPClient.EASY_SDK_AUDIO_FRAME_FLAG, "", "", autoRecord ? new File(f, new SimpleDateFormat("yy-MM-dd HH:mm:ss").format(new Date()) + ".mp4").getPath() : null);
             }catch (Exception e){
                 e.printStackTrace();
-                Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
                 return;
             }
 //        mStreamRender.start2(mUrl, mType);
