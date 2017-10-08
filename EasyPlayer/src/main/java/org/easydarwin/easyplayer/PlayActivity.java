@@ -38,7 +38,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import com.umeng.analytics.MobclickAgent;
 
 import org.easydarwin.easyplayer.fragments.ImageFragment;
 import org.easydarwin.easyplayer.fragments.PlayFragment;
@@ -540,12 +539,10 @@ public class PlayActivity extends AppCompatActivity {
 
     public void onResume() {
         super.onResume();
-        MobclickAgent.onResume(this);       //统计时长
     }
 
     public void onPause() {
         super.onPause();
-        MobclickAgent.onPause(this);
     }
 
     @Override

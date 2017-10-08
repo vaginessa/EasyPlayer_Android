@@ -52,6 +52,7 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
 
     /* 视频编码 */
     public static final int EASY_SDK_VIDEO_CODEC_H264 = 0x1C;		/* H264  */
+    public static final int EASY_SDK_VIDEO_CODEC_H265 = 0x48323635; /*H265*/
     public static final int EASY_SDK_VIDEO_CODEC_MJPEG = 0x08;/* MJPEG */
     public static final int EASY_SDK_VIDEO_CODEC_MPEG4 = 0x0D;/* MPEG4 */
 
@@ -98,8 +99,11 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
     public static final String EXTRA_VIDEO_HEIGHT = "extra-video-height";
 
 
+    private static final int NAL_VPS = 32;
+    private static final int NAL_SPS = 33;
+    private static final int NAL_PPS = 34;
+
     private final String mKey;
-    private final SurfaceTexture mTexture;
     private Surface mSurface;
     private volatile Thread mThread, mAudioThread;
     private final ResultReceiver mRR;
@@ -278,9 +282,8 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
      * @param key     SDK key
      * @param surface 显示视频用的surface
      */
-    public EasyRTSPClient(Context context, String key, SurfaceTexture surface, ResultReceiver receiver) {
-        mTexture = surface;
-        mSurface = new Surface(surface);
+    public EasyRTSPClient(Context context, String key, Surface surface, ResultReceiver receiver) {
+        mSurface = surface;
         mContext = context;
         mKey = key;
         mRR = receiver;
@@ -341,7 +344,7 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
         mAudioEnable = enable;
         AudioTrack at = mAudioTrack;
         if (at != null) {
-            Log.i(TAG,String.format("audio will be %s", enable?"enabled":"disabled"));
+            Log.i(TAG, String.format("audio will be %s", enable ? "enabled" : "disabled"));
             synchronized (at) {
                 if (!enable) {
                     at.pause();
@@ -360,24 +363,26 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
     public void stop() {
         Thread t = mThread;
         mThread = null;
-        t.interrupt();
-        try {
-            t.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        if (t != null) {
+            t.interrupt();
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
 
         t = mAudioThread;
         mAudioThread = null;
-        t.interrupt();
-        try {
-            t.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        if (t != null) {
+            t.interrupt();
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
-
         stopRecord();
-
 
         mQueue.clear();
         if (mClient != null) {
@@ -439,7 +444,7 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
                         frameInfo = mQueue.takeAudioFrame();
                         final Thread t = Thread.currentThread();
                         int requestCode = am.requestAudioFocus(l, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
-                        if (requestCode !=  AUDIOFOCUS_REQUEST_GRANTED){
+                        if (requestCode != AUDIOFOCUS_REQUEST_GRANTED) {
                             return;
                         }
                         if (mAudioTrack == null) {
@@ -468,7 +473,7 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
                             }
                             outLen[0] = mBufferReuse.length;
                             long ms = SystemClock.currentThreadTimeMillis();
-                            int nRet = AudioCodec.decode( handle, frameInfo.buffer, 0, frameInfo.length, mBufferReuse, outLen);
+                            int nRet = AudioCodec.decode(handle, frameInfo.buffer, 0, frameInfo.length, mBufferReuse, outLen);
                             if (nRet == 0) {
                                 if (frameInfo.codec != EASY_SDK_AUDIO_CODEC_AAC) {
                                     pumpPCMSample(mBufferReuse, outLen[0], frameInfo.stamp);
@@ -535,8 +540,8 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
         if (-1 == pos0) {
             return -1;
         }
-        if (pos0 > 0 && data[pos0-1] == 0){ // 0 0 0 1
-            pos0 = pos0-1;
+        if (pos0 > 0 && data[pos0 - 1] == 0) { // 0 0 0 1
+            pos0 = pos0 - 1;
         }
         pos1 = -1;
         for (i = pos0 + 4; i < length - 4; i++) {
@@ -558,8 +563,89 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
         System.arraycopy(data, pos0, dataOut, 0, pos1 - pos0);
         // memcpy(pXPS+1, pES+pos0, pos1-pos0);
         // *pMaxXPSLen = pos1-pos0+1;
-        outLen[0] = pos1 - pos0 ;
+        outLen[0] = pos1 - pos0;
         return pos1;
+    }
+
+    private static byte[] getvps_sps_pps(byte[] data, int offset, int length) {
+        int i = 0;
+        int vps = -1, sps = -1, pps = -1;
+        do {
+            if (vps == -1) {
+                for (i = offset; i < length - 4; i++) {
+                    if ((0x00 == data[i]) && (0x00 == data[i + 1]) && (0x01 == data[i + 2])) {
+                        byte nal_spec = data[i + 3];
+                        int nal_type = (nal_spec >> 1) & 0x03f;
+                        if (nal_type == NAL_VPS) {
+                            // vps found.
+                            if (data[i - 1] == 0x00) {  // start with 00 00 00 01
+                                vps = i - 1;
+                            } else {                      // start with 00 00 01
+                                vps = i;
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+            if (sps == -1) {
+                for (i = vps; i < length - 4; i++) {
+                    if ((0x00 == data[i]) && (0x00 == data[i + 1]) && (0x01 == data[i + 2])) {
+                        byte nal_spec = data[i + 3];
+                        int nal_type = (nal_spec >> 1) & 0x03f;
+                        if (nal_type == NAL_SPS) {
+                            // vps found.
+                            if (data[i - 1] == 0x00) {  // start with 00 00 00 01
+                                sps = i - 1;
+                            } else {                      // start with 00 00 01
+                                sps = i;
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+            if (pps == -1) {
+                for (i = sps; i < length - 4; i++) {
+                    if ((0x00 == data[i]) && (0x00 == data[i + 1]) && (0x01 == data[i + 2])) {
+                        byte nal_spec = data[i + 3];
+                        int nal_type = (nal_spec >> 1) & 0x03f;
+                        if (nal_type == NAL_PPS) {
+                            // vps found.
+                            if (data[i - 1] == 0x00) {  // start with 00 00 00 01
+                                pps = i - 1;
+                            } else {                    // start with 00 00 01
+                                pps = i;
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        } while (vps == -1 || sps == -1 || pps == -1);
+        if (vps == -1 || sps == -1 || pps == -1) {// 没有获取成功。
+            return null;
+        }
+        // 计算csd buffer的长度。即从vps的开始到pps的结束的一段数据
+        int begin = vps;
+        int end = -1;
+        for (i = pps; i < length - 4; i++) {
+            if ((0x00 == data[i]) && (0x00 == data[i + 1]) && (0x01 == data[i + 2])) {
+                if (data[i - 1] == 0x00) {  // start with 00 00 00 01
+                    end = i - 1;
+                } else {                    // start with 00 00 01
+                    end = i;
+                }
+                break;
+            }
+        }
+        if (end == -1 || end < begin) {
+            return null;
+        }
+        // 拷贝并返回
+        byte[] buf = new byte[end - begin];
+        System.arraycopy(data, begin, buf, 0, buf.length);
+        return buf;
     }
 
     private static boolean codecMatch(String mimeType, MediaCodecInfo codecInfo) {
@@ -624,8 +710,8 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
                         if (mCodec == null && mDecoder == null) {
                             frameInfo = mQueue.takeVideoFrame();
                             try {
-
-                                MediaFormat format = MediaFormat.createVideoFormat("video/avc", mWidth, mHeight);
+                                final String mime = frameInfo.codec == EASY_SDK_VIDEO_CODEC_H264 ? "video/avc" : "video/hevc";
+                                MediaFormat format =  MediaFormat.createVideoFormat(mime, mWidth, mHeight);
                                 format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 0);
                                 format.setInteger(MediaFormat.KEY_PUSH_BLANK_BUFFERS_ON_STOP, pushBlankBuffersOnStop ? 1 : 0);
                                 if (mCSD0 != null) {
@@ -636,9 +722,10 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
                                 if (mCSD1 != null) {
                                     format.setByteBuffer("csd-1", mCSD1);
                                 } else {
-                                    throw new InvalidParameterException("csd-1 is invalid.");
+                                    if (frameInfo.codec == EASY_SDK_VIDEO_CODEC_H264)
+                                        throw new InvalidParameterException("csd-1 is invalid.");
                                 }
-                                MediaCodec codec = MediaCodec.createDecoderByType("video/avc");
+                                MediaCodec codec = MediaCodec.createDecoderByType(mime);
                                 Log.i(TAG, String.format("config codec:%s", format));
                                 codec.configure(format, mSurface, null, 0);
                                 codec.setVideoScalingMode(MediaCodec.VIDEO_SCALING_MODE_SCALE_TO_FIT);
@@ -646,12 +733,12 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
                                 mCodec = codec;
                             } catch (Throwable e) {
                                 Log.e(TAG, String.format("init codec error due to %s", e.getMessage()));
-                                e.fillInStackTrace();
+                                e.printStackTrace();
                                 final VideoCodec.VideoDecoderLite decoder = new VideoCodec.VideoDecoderLite();
-                                decoder.create(mSurface);
+                                decoder.create(mSurface, frameInfo.codec == EASY_SDK_VIDEO_CODEC_H264);
                                 mDecoder = decoder;
                             }
-                            previewTickUs = mTexture.getTimestamp();
+//                            previewTickUs = mTexture.getTimestamp();
 //                            differ = previewTickUs - frameInfo.stamp;
 //                            index = mCodec.dequeueInputBuffer(0);
 //                            if (index >= 0) {
@@ -674,7 +761,7 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
                         if (mDecoder != null) {
                             if (frameInfo != null) {
                                 long decodeBegin = System.currentTimeMillis();
-                                int []size = new int[2];
+                                int[] size = new int[2];
                                 mDecoder.decodeFrame(frameInfo, size);
                                 long decodeSpend = System.currentTimeMillis() - decodeBegin;
 
@@ -724,7 +811,7 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
                                         break;
                                     case MediaCodec.INFO_OUTPUT_FORMAT_CHANGED:
                                         MediaFormat mf = mCodec.getOutputFormat();
-                                        Log.i(TAG, "INFO_OUTPUT_FORMAT_CHANGED ：" +mf);
+                                        Log.i(TAG, "INFO_OUTPUT_FORMAT_CHANGED ：" + mf);
                                         break;
                                     case MediaCodec.INFO_TRY_AGAIN_LATER:
                                         // 输出为空
@@ -784,8 +871,8 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
     }
 
     private static final long fixSleepTime(long sleepTimeUs, long totalTimestampDifferUs, long delayUs) {
-        if (totalTimestampDifferUs < 0l){
-            Log.w(TAG,String.format("totalTimestampDifferUs is:%d, this should not be happen.", totalTimestampDifferUs));
+        if (totalTimestampDifferUs < 0l) {
+            Log.w(TAG, String.format("totalTimestampDifferUs is:%d, this should not be happen.", totalTimestampDifferUs));
             totalTimestampDifferUs = 0;
         }
         double dValue = ((double) (delayUs - totalTimestampDifferUs)) / 1000000d;
@@ -858,7 +945,7 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
             if (!frameInfo.audio) {
                 throw new IllegalArgumentException("frame should be audio!");
             }
-            if (frameInfo.codec != EASY_SDK_AUDIO_CODEC_AAC){
+            if (frameInfo.codec != EASY_SDK_AUDIO_CODEC_AAC) {
                 throw new IllegalArgumentException("audio codec should be aac!");
             }
             bi.offset += 7;
@@ -924,7 +1011,7 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
             mReceivedDataLength += frameInfo.length;
         }
         if (_frameType == RTSPClient.EASY_SDK_VIDEO_FRAME_FLAG) {
-            if (frameInfo.codec != EASY_SDK_VIDEO_CODEC_H264) {
+            if (frameInfo.codec != EASY_SDK_VIDEO_CODEC_H264 && frameInfo.codec != EASY_SDK_VIDEO_CODEC_H265) {
                 ResultReceiver rr = mRR;
                 if (!mNotSupportedVideoCB && rr != null) {
                     mNotSupportedVideoCB = true;
@@ -973,30 +1060,36 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
 
                 Log.i(TAG, String.format("width:%d,height:%d", mWidth, mHeight));
 
-                byte[] dataOut = new byte[128];
-                int[] outLen = new int[]{128};
-                int result = getXPS(frameInfo.buffer, 0, frameInfo.buffer.length, dataOut, outLen, 7);
-                if (result >= 0) {
-                    ByteBuffer csd0 = ByteBuffer.allocate(outLen[0]);
-                    csd0.put(dataOut, 0, outLen[0]);
-                    csd0.clear();
-                    mCSD0 = csd0;
-                    Log.i(TAG, String.format("CSD-0 searched"));
-                }
-                outLen[0] = 128;
-                result = getXPS(frameInfo.buffer, 0, frameInfo.buffer.length, dataOut, outLen, 8);
-                if (result >= 0) {
-                    ByteBuffer csd1 = ByteBuffer.allocate(outLen[0]);
-                    csd1.put(dataOut, 0, outLen[0]);
-                    csd1.clear();
-                    mCSD1 = csd1;
-                    Log.i(TAG, String.format("CSD-1 searched"));
-                }
-
-                if (false) {
-                    int off = (result - frameInfo.offset);
-                    frameInfo.offset += off;
-                    frameInfo.length -= off;
+                if (frameInfo.codec == EASY_SDK_VIDEO_CODEC_H264) {
+                    byte[] dataOut = new byte[128];
+                    int[] outLen = new int[]{128};
+                    int result = getXPS(frameInfo.buffer, 0, 256, dataOut, outLen, 7);
+                    if (result >= 0) {
+                        ByteBuffer csd0 = ByteBuffer.allocate(outLen[0]);
+                        csd0.put(dataOut, 0, outLen[0]);
+                        csd0.clear();
+                        mCSD0 = csd0;
+                        Log.i(TAG, String.format("CSD-0 searched"));
+                    }
+                    outLen[0] = 128;
+                    result = getXPS(frameInfo.buffer, 0, 256, dataOut, outLen, 8);
+                    if (result >= 0) {
+                        ByteBuffer csd1 = ByteBuffer.allocate(outLen[0]);
+                        csd1.put(dataOut, 0, outLen[0]);
+                        csd1.clear();
+                        mCSD1 = csd1;
+                        Log.i(TAG, String.format("CSD-1 searched"));
+                    }
+                    if (false) {
+                        int off = (result - frameInfo.offset);
+                        frameInfo.offset += off;
+                        frameInfo.length -= off;
+                    }
+                } else {
+                    byte[] spsPps = getvps_sps_pps(frameInfo.buffer, 0, 256);
+                    if (spsPps != null) {
+                        mCSD0 = ByteBuffer.wrap(spsPps);
+                    }
                 }
                 Log.i(TAG, String.format("RESULT_VIDEO_SIZE:%d*%d", frameInfo.width, frameInfo.height));
                 if (rr != null) rr.send(RESULT_VIDEO_SIZE, bundle);

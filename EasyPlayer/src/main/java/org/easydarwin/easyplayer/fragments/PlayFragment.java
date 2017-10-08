@@ -24,6 +24,7 @@ import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
@@ -373,129 +374,23 @@ public class PlayFragment extends Fragment implements TextureView.SurfaceTexture
     }
 
     protected void startRending(SurfaceTexture surface) {
+        /* 本Key为3个月临时授权License，如需商业使用或者更改applicationId，请邮件至support@easydarwin.org申请此产品的授权。
+         */
+        mStreamRender = new EasyRTSPClient(getContext(), "79393674363536526D34324148304E5A70727A66792B5A76636D63755A57467A65575268636E64706269356C59584E356347786865575679567778576F50394C34456468646D6C754A6B4A68596D397A595541794D4445325257467A65555268636E6470626C526C5957316C59584E35", new Surface(surface), mResultReceiver);
 
-        if (mUrl.toLowerCase().startsWith("rtmp://")){
-//            Handler mainHandler = new Handler();
-//            DefaultBandwidthMeter bandwidthMeter = new DefaultBandwidthMeter(mainHandler, new BandwidthMeter.EventListener() {
-//                @Override
-//                public void onBandwidthSample(int elapsedMs, long bytes, long bitrate) {
-//                    PlayActivity activity = (PlayActivity) getActivity();
-//                    TextView streamBps = (TextView) activity.findViewById(R.id.stream_bps);
-//                    streamBps.setText(bitrate/ 1024 + "Kbps");
-//                }
-//            });
-//            TrackSelection.Factory videoTrackSelectionFactory =
-//                    new AdaptiveVideoTrackSelection.Factory(bandwidthMeter);
-//            TrackSelector trackSelector =
-//                    new DefaultTrackSelector(mainHandler, videoTrackSelectionFactory);
-//
-//// 2. Create a default LoadControl
-//            LoadControl loadControl = new DefaultLoadControl();
-//
-//// 3. Create the player
-//            SimpleExoPlayer player =
-//                    ExoPlayerFactory.newSimpleInstance(getContext(), trackSelector, loadControl,null,false,1000);
-//
-//
-//
-////        Allocator allocator = new DefaultAllocator(false, 1024*1024);
-//
-////        DefaultDataSourceFactory defaultDataSourceFactory = new DefaultDataSourceFactory(getContext(), bandwidthMeter,
-////                new DefaultHttpDataSourceFactory("easypalyer", bandwidthMeter));
-//
-//
-//            DataSource.Factory factory = new DataSource.Factory() {
-//                @Override
-//                public DataSource createDataSource() {
-//                    return  new RtmpDataSource();
-//                }
-//            };
-//
-//
-//            player.prepare(new ExtractorMediaSource(Uri.parse(mUrl), factory, new DefaultExtractorsFactory(),
-//                    mainHandler, null));
-//
-//
-//            player.setVideoTextureView(mSurfaceView);
-//            player.setPlayWhenReady(true);
-//
-//
-//            player.setVideoListener(new SimpleExoPlayer.VideoListener() {
-//                @Override
-//                public void onVideoSizeChanged(int width, int height, int unappliedRotationDegrees, float pixelWidthHeightRatio) {
-//                    mWidth = width;
-//                    mHeight = height;
-//                    onVideoSizeChange();
-//                }
-//
-//                @Override
-//                public void onRenderedFirstFrame() {
-//                    onVideoDisplayed();
-//                }
-//
-//                @Override
-//                public void onVideoTracksDisabled() {
-//
-//                }
-//            });
-//            player.setVideoDebugListener(new VideoRendererEventListener() {
-//                @Override
-//                public void onVideoEnabled(DecoderCounters counters) {
-//
-//                }
-//
-//                @Override
-//                public void onVideoDecoderInitialized(String decoderName, long initializedTimestampMs, long initializationDurationMs) {
-//
-//                }
-//
-//                @Override
-//                public void onVideoInputFormatChanged(Format format) {
-//
-//                }
-//
-//                @Override
-//                public void onDroppedFrames(int count, long elapsedMs) {
-//
-//                }
-//
-//                @Override
-//                public void onVideoSizeChanged(int width, int height, int unappliedRotationDegrees, float pixelWidthHeightRatio) {
-//
-//                }
-//
-//                @Override
-//                public void onRenderedFirstFrame(Surface surface) {
-//
-//                }
-//
-//                @Override
-//                public void onVideoDisabled(DecoderCounters counters) {
-//
-//                }
-//            });
-//            mPlayer = player;
-        }else {
-            /*
-            *本Key为3个月临时授权License，如需商业使用或者更改applicationId，请邮件至support@easydarwin.org申请此产品的授权。
-            */
-            mStreamRender = new EasyRTSPClient(getContext(), "79393674363536526D34324148304E5A70727A66792B5A76636D63755A57467A65575268636E64706269356C59584E356347786865575679567778576F50394C34456468646D6C754A6B4A68596D397A595541794D4445325257467A65555268636E6470626C526C5957316C59584E35", surface, mResultReceiver);
+        boolean autoRecord = PreferenceManager.getDefaultSharedPreferences(getContext()).getBoolean("auto_record", false);
 
-            boolean autoRecord = PreferenceManager.getDefaultSharedPreferences(getContext()).getBoolean("auto_record", false);
+        File f = new File(TheApp.sMoviePath);
+        f.mkdirs();
 
-            File f = new File(TheApp.sMoviePath);
-            f.mkdirs();
-
-            try {
-                mStreamRender.start(mUrl, mType, RTSPClient.EASY_SDK_VIDEO_FRAME_FLAG | RTSPClient.EASY_SDK_AUDIO_FRAME_FLAG, "", "", autoRecord ? new File(f, new SimpleDateFormat("yy-MM-dd HH:mm:ss").format(new Date()) + ".mp4").getPath() : null);
-            }catch (Exception e){
-                e.printStackTrace();
-                Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-                return;
-            }
-//        mStreamRender.start2(mUrl, mType);
-            mRR.send(RESULT_REND_STARTED, null);
+        try {
+            mStreamRender.start(mUrl, mType, RTSPClient.EASY_SDK_VIDEO_FRAME_FLAG | RTSPClient.EASY_SDK_AUDIO_FRAME_FLAG, "", "", autoRecord ? new File(f, new SimpleDateFormat("yy-MM-dd HH:mm:ss").format(new Date()) + ".mp4").getPath() : null);
+        }catch (Exception e){
+            e.printStackTrace();
+            Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+            return;
         }
+        mRR.send(RESULT_REND_STARTED, null);
     }
 
     @Override
@@ -548,6 +443,10 @@ public class PlayFragment extends Fragment implements TextureView.SurfaceTexture
         mAngleView.setCurrentProgress(-(int) ((currentMiddle - middle) * 100 / maxMovement));
     }
 
+    /**
+     * 抓拍
+     * @param path
+     */
     public void takePicture(final String path) {
         try {
             if (mWidth <= 0 || mHeight <= 0) {

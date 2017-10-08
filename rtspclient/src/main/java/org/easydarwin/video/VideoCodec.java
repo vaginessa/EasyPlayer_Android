@@ -1,8 +1,5 @@
 package org.easydarwin.video;
 
-import android.annotation.TargetApi;
-import android.os.Build;
-
 /**
  * Created by John on 2017/1/5.
  */
@@ -14,8 +11,10 @@ public class VideoCodec {
         System.loadLibrary("VideoCodecer");
     }
 
+    public static final int DECODER_H264 = 0;
+    public static final int DECODER_H265 = 1;
 
-    private native long create(Object surface);
+    private native long create(Object surface, int codec);
 
     private native void close(long handle);
 
@@ -23,8 +22,8 @@ public class VideoCodec {
 
     private native int decode(long handle, byte[] in, int offset, int length,int []size);
 
-    public int decoder_create(Object surface) {
-        mHandle = create(surface);
+    public int decoder_create(Object surface, int codec) {
+        mHandle = create(surface, codec);
         if (mHandle != 0) {
             return 0;
         }
@@ -50,12 +49,12 @@ public class VideoCodec {
         private int[] mSize;
         private Object surface;
 
-        public void create(Object surface) {
+        public void create(Object surface, boolean h264) {
             if (surface == null) {
                 throw new NullPointerException("surface is null!");
             }
             this.surface = surface;
-            decoder_create(surface);
+            decoder_create(surface, h264 ? 0 : 1);
             mSize = new int[2];
         }
 

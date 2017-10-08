@@ -5,7 +5,10 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 
+import com.tencent.bugly.crashreport.CrashReport;
+
 import org.easydarwin.easyplayer.data.EasyDBHelper;
+import org.esaydarwin.rtsp.player.BuildConfig;
 import org.esaydarwin.rtsp.player.R;
 
 /**
@@ -23,6 +26,7 @@ public class TheApp extends Application {
         super.onCreate();
         sDB = new EasyDBHelper(this).getWritableDatabase();
         resetServer();
+        CrashReport.initCrashReport(getApplicationContext(), "045f78d6f0", BuildConfig.DEBUG);
     }
 
     public void resetServer(){

@@ -32,7 +32,6 @@ import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.signature.StringSignature;
-import com.umeng.analytics.MobclickAgent;
 
 import org.easydarwin.easyplayer.data.VideoSource;
 import org.easydarwin.update.UpdateMgr;
@@ -354,12 +353,10 @@ public class PlaylistActivity extends AppCompatActivity implements View.OnClickL
 
     public void onResume() {
         super.onResume();
-        MobclickAgent.onResume(this);       //统计时长
     }
 
     public void onPause() {
         super.onPause();
-        MobclickAgent.onPause(this);
     }
 
     @Override
