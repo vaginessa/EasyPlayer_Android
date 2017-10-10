@@ -218,9 +218,9 @@ public class PlayFragment extends Fragment implements TextureView.SurfaceTexture
                 }else if (resultCode == EasyRTSPClient.RESULT_EVENT){
 
                     int errorcode = resultData.getInt("errorcode");
-                    if (errorcode != 0){
-                        stopRending();
-                    }
+//                    if (errorcode != 0){
+//                        stopRending();
+//                    }
                     activity.onEvent(PlayFragment.this, errorcode,resultData.getString("event-msg"));
                 }else if (resultCode == EasyRTSPClient.RESULT_RECORD_BEGIN){
                     activity.onRecordState(1);
