@@ -531,6 +531,7 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
         int pos0;
         int pos1;
         pos0 = -1;
+        length = Math.min(length, data.length);
         for (i = offset; i < length - 4; i++) {
             if ((0 == data[i]) && (0 == data[i + 1]) && (1 == data[i + 2]) && (type == (0x0F & data[i + 3]))) {
                 pos0 = i;
@@ -570,6 +571,7 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
     private static byte[] getvps_sps_pps(byte[] data, int offset, int length) {
         int i = 0;
         int vps = -1, sps = -1, pps = -1;
+        length = Math.min(length, data.length);
         do {
             if (vps == -1) {
                 for (i = offset; i < length - 4; i++) {
