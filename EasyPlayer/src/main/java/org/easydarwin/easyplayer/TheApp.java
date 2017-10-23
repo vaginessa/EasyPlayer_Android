@@ -18,12 +18,14 @@ public class TheApp extends Application {
 
     public static final String DEFAULT_SERVER_IP = "cloud.easydarwin.org";
     public static SQLiteDatabase sDB;
-    public static final String sPicturePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/EasyPlayer";
-    public static final String sMoviePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES) + "/EasyPlayer";
+    public static String sPicturePath;
+    public static String sMoviePath;
 
     @Override
     public void onCreate() {
         super.onCreate();
+        sPicturePath = getExternalFilesDir(Environment.DIRECTORY_PICTURES) + "/EasyPlayer";
+        sMoviePath = getExternalFilesDir(Environment.DIRECTORY_MOVIES) + "/EasyPlayer";
         sDB = new EasyDBHelper(this).getWritableDatabase();
         resetServer();
         CrashReport.initCrashReport(getApplicationContext(), "045f78d6f0", BuildConfig.DEBUG);

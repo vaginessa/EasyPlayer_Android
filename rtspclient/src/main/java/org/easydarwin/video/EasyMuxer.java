@@ -4,6 +4,7 @@ import android.media.MediaCodec;
 import android.media.MediaFormat;
 import android.media.MediaMuxer;
 import android.os.Build;
+import android.text.TextUtils;
 import android.util.Log;
 
 import java.io.IOException;
@@ -29,6 +30,12 @@ public class EasyMuxer {
     private MediaFormat mAudioFormat;
 
     public EasyMuxer(String path, long durationMillis) {
+        if (TextUtils.isEmpty(path)){
+            throw new InvalidParameterException("path should not be empty!");
+        }
+        if (path.toLowerCase().endsWith(".mp4")){
+            path = path.substring(0, path.toLowerCase().lastIndexOf(".mp4"));
+        }
         mFilePath = path;
         this.durationMillis = durationMillis;
         Object mux = null;
@@ -49,10 +56,10 @@ public class EasyMuxer {
             throw new RuntimeException("already add all tracks");
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            int track = mMuxer.addTrack(format);
-            if (VERBOSE)
-                Log.i(TAG, String.format("addTrack %s result %d", isVideo ? "video" : "audio", track));
             if (isVideo) {
+                int track = mMuxer.addTrack(format);
+                if (VERBOSE)
+                    Log.i(TAG, String.format("addTrack %s result %d", isVideo ? "video" : "audio", track));
                 mVideoFormat = format;
                 mVideoTrackIndex = track;
                 if (mAudioTrackIndex != -1) {
@@ -62,8 +69,13 @@ public class EasyMuxer {
                     mBeginMillis = System.currentTimeMillis();
                 }
             } else {
-                mAudioFormat = format;
-                mAudioTrackIndex = track;
+                if (format != null) {
+                    int track = mMuxer.addTrack(format);
+                    if (VERBOSE)
+                        Log.i(TAG, String.format("addTrack %s result %d", isVideo ? "video" : "audio", track));
+                    mAudioFormat = format;
+                    mAudioTrackIndex = track;
+                }
                 if (mVideoTrackIndex != -1) {
                     mMuxer.start();
                     mBeginMillis = System.currentTimeMillis();
@@ -73,9 +85,12 @@ public class EasyMuxer {
     }
 
     public synchronized void pumpStream(ByteBuffer outputBuffer, MediaCodec.BufferInfo bufferInfo, boolean isVideo) {
-        if (mAudioTrackIndex == -1 || mVideoTrackIndex == -1) {
+        if (mVideoTrackIndex == -1) {
             Log.i(TAG, String.format("pumpStream [%s] but muxer is not start.ignore..", isVideo ? "video" : "audio"));
             return;
+        }
+        if (!isVideo){
+            if (mAudioTrackIndex == -1) return;
         }
         if ((bufferInfo.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0) {
             // The codec config data was pulled out and fed to the muxer when we got

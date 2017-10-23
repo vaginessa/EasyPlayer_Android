@@ -905,20 +905,23 @@ public class EasyRTSPClient implements RTSPClient.RTSPSourceCallBack {
         format = new MediaFormat();
         int audioObjectType = 2;
         int sampleRateIndex = getSampleIndex(mMediaInfo.sample);
-        int channelConfig = mMediaInfo.channel;
-        byte[] audioSpecificConfig = CodecSpecificDataUtil.buildAacAudioSpecificConfig(audioObjectType, sampleRateIndex, channelConfig);
-        Pair<Integer, Integer> audioParams = CodecSpecificDataUtil.parseAacAudioSpecificConfig(audioSpecificConfig);
+        if (sampleRateIndex > 0) {
+            int channelConfig = mMediaInfo.channel;
+            byte[] audioSpecificConfig = CodecSpecificDataUtil.buildAacAudioSpecificConfig(audioObjectType, sampleRateIndex, channelConfig);
+            Pair<Integer, Integer> audioParams = CodecSpecificDataUtil.parseAacAudioSpecificConfig(audioSpecificConfig);
 //                                format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 0);
-        format.setString(MediaFormat.KEY_MIME, MediaFormat.MIMETYPE_AUDIO_AAC);
-        format.setInteger(MediaFormat.KEY_CHANNEL_COUNT, audioParams.second);
-        format.setInteger(MediaFormat.KEY_SAMPLE_RATE, audioParams.first);
+            format.setString(MediaFormat.KEY_MIME, MediaFormat.MIMETYPE_AUDIO_AAC);
+            format.setInteger(MediaFormat.KEY_CHANNEL_COUNT, audioParams.second);
+            format.setInteger(MediaFormat.KEY_SAMPLE_RATE, audioParams.first);
 
-        List<byte[]> bytes = Collections.singletonList(audioSpecificConfig);
-        for (int j = 0; j < bytes.size(); j++) {
-            format.setByteBuffer("csd-" + j, ByteBuffer.wrap(bytes.get(j)));
+            List<byte[]> bytes = Collections.singletonList(audioSpecificConfig);
+            for (int j = 0; j < bytes.size(); j++) {
+                format.setByteBuffer("csd-" + j, ByteBuffer.wrap(bytes.get(j)));
+            }
+            mObject.addTrack(format, false);
+        }else{
+            mObject.addTrack(null, false);
         }
-        mObject.addTrack(format, false);
-
         ResultReceiver rr = mRR;
         if (rr != null) {
             rr.send(RESULT_RECORD_BEGIN, null);

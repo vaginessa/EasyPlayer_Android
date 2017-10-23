@@ -35,6 +35,7 @@ public class EasyAACMuxer extends EasyMuxer {
     }
 
     public synchronized void pumpPCMStream(byte []pcm, int length, long timeUs) throws IOException {
+
         if (mMediaCodec == null) {// 启动AAC编码器。这里用MediaCodec来编码
             if (mAudioFormat == null) return;
             mMediaCodec = MediaCodec.createEncoderByType("audio/mp4a-latm");

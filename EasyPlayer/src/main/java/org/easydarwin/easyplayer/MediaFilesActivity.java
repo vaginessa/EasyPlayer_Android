@@ -13,6 +13,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.app.ListFragment;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ActionMode;
 import android.support.v7.widget.GridLayoutManager;
@@ -216,7 +217,7 @@ public class MediaFilesActivity extends AppCompatActivity {
             mBinding.recycler.setAdapter(new RecyclerView.Adapter() {
                 @Override
                 public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-                    ImagePickerItemBinding binding = DataBindingUtil.inflate(getLayoutInflater(null), R.layout.image_picker_item, parent, false);
+                    ImagePickerItemBinding binding = DataBindingUtil.inflate(LayoutInflater.from(getContext()), R.layout.image_picker_item, parent, false);
                     return new ImageItemHolder(binding);
                 }
 
@@ -394,26 +395,22 @@ public class MediaFilesActivity extends AppCompatActivity {
                 Toast.makeText(getContext(), "文件不存在", Toast.LENGTH_SHORT).show();
                 return;
             }
-//            intent.putExtra(EXTRA_IMAGE_URL, Uri.fromFile(new File(path)));
-//            setResult(RESULT_OK, intent);
-//            finish();
-
+            Uri photoURI = FileProvider.getUriForFile(getActivity(), getString(R.string.org_easydarwin_update_authorities), new File(path));
+            Intent intent = new Intent();
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
             if (path.endsWith(".jpg")) {
                 try {
-                    Intent intent = new Intent();
                     intent.setAction(Intent.ACTION_VIEW);
-                    intent.setDataAndType(Uri.fromFile(mSubFiles[holder.getAdapterPosition()]),
-                            "image/*");
+                    intent.setDataAndType(photoURI, "image/*");
                     startActivity(intent);
                 } catch (ActivityNotFoundException e) {
                     e.printStackTrace();
                 }
             } else if (path.endsWith(".mp4")) {
                 try {
-                    Intent intent = new Intent();
-                    intent.setAction(android.content.Intent.ACTION_VIEW);
-                    intent.setDataAndType(Uri.fromFile(mSubFiles[holder.getAdapterPosition()]), "video/*");
+                    intent.setAction(Intent.ACTION_VIEW);
+                    intent.setDataAndType(photoURI, "video/*");
                     startActivity(intent);
                 } catch (ActivityNotFoundException e) {
                     e.printStackTrace();
